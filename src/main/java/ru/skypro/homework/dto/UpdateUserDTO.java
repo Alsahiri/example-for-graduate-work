@@ -8,9 +8,4 @@ public class UpdateUserDTO {
     private String lastName;
     private String phone;
 
-    public UpdateUserDTO(String firstName, String lastName, String phone) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phone = phone;
-    }
 }
