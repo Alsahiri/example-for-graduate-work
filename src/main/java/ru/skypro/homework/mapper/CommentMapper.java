@@ -1,5 +1,6 @@
 package ru.skypro.homework.mapper;
 
+import org.springframework.stereotype.Component;
 import ru.skypro.homework.dto.CommentDTO;
 import ru.skypro.homework.dto.CommentsDTO;
 import ru.skypro.homework.model.Ad;
@@ -13,8 +14,9 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
+@Component
 public class CommentMapper {
-    public static CommentDTO toCommentDTO(Comment comment) {
+    public CommentDTO toCommentDTO(Comment comment) {
         CommentDTO commentDTO = new CommentDTO();
 
         commentDTO.setPk(comment.getCommentId());
@@ -26,7 +28,7 @@ public class CommentMapper {
         return commentDTO;
     }
 
-    public static Comment fromCommentDTO(CommentDTO commentDTO) {
+    public Comment fromCommentDTO(CommentDTO commentDTO) {
         Comment comment = new Comment();
 
         comment.setCommentId(commentDTO.getPk());
@@ -35,10 +37,10 @@ public class CommentMapper {
         return comment;
     }
 
-    public static CommentsDTO toCommentsDTO(List<Comment> comments) {
+    public CommentsDTO toCommentsDTO(List<Comment> comments) {
         CommentsDTO commentsDTO = new CommentsDTO();
         commentsDTO.setCount(comments.size());
-        commentsDTO.setResults(comments.stream().map(CommentMapper::toCommentDTO).collect(Collectors.toList()));
+        commentsDTO.setResults(comments.stream().map(this::toCommentDTO).collect(Collectors.toList()));
 
         return commentsDTO;
     }

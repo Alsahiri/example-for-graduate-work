@@ -4,11 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.skypro.homework.dto.NewPasswordDTO;
 import ru.skypro.homework.dto.UpdateUserDTO;
 import ru.skypro.homework.dto.UserDTO;
+import ru.skypro.homework.service.UserService;
 
 
 @Slf4j
@@ -16,19 +18,24 @@ import ru.skypro.homework.dto.UserDTO;
 @RestController
 @RequiredArgsConstructor
 public class UsersController {
+
+    private final UserService userService;
+
     @PostMapping("/users/set_password")
-    public ResponseEntity<Void> setPassword(@RequestBody NewPasswordDTO newPasswordDTO) {
+    public ResponseEntity<Void> setPassword(@RequestBody NewPasswordDTO newPasswordDTO,
+                                            Authentication authentication) {
+        userService.setNewPassword(authentication, newPasswordDTO);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/users/me")
-    public ResponseEntity<UserDTO> getUser() {
-        return ResponseEntity.ok(new UserDTO());
+    public ResponseEntity<UserDTO> getUser(Authentication authentication) {
+        return ResponseEntity.ok(userService.getUserInfoByUsername(authentication));
     }
 
     @PatchMapping("/users/me")
-    public ResponseEntity<UpdateUserDTO> updateUser(@RequestBody UpdateUserDTO updateUserDTO) {
-        return ResponseEntity.ok(updateUserDTO);
+    public ResponseEntity<UpdateUserDTO> updateUser(@RequestBody UpdateUserDTO updateUserDTO, Authentication authentication) {
+        return ResponseEntity.ok(userService.updateUserInfo(authentication, updateUserDTO));
     }
 
     @PatchMapping(value = "/users/me/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

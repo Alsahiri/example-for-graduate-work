@@ -1,11 +1,15 @@
 package ru.skypro.homework.mapper;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 import ru.skypro.homework.dto.UpdateUserDTO;
 import ru.skypro.homework.dto.UserDTO;
 import ru.skypro.homework.model.User;
-
+@Component
 public class UserMapper {
-    public static UserDTO toUserDTO(User user) {
+
+    public UserDTO toUserDTO(User user) {
         UserDTO userDTO = new UserDTO();
 
         userDTO.setId(user.getUserId());
@@ -18,20 +22,8 @@ public class UserMapper {
         return userDTO;
     }
 
-    public static User fromUserDTO(UserDTO userDTO) {
-        User user = new User();
 
-        user.setUserId(userDTO.getId());
-        user.setEmail(userDTO.getEmail());
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
-        user.setPhone(userDTO.getPhone());
-        user.setRole(userDTO.getRole());
-
-        return user;
-    }
-
-    public static UpdateUserDTO toUpdateUserDTO(User user) {
+    public  UpdateUserDTO toUpdateUserDTO(User user) {
         UpdateUserDTO updateUserDTO = new UpdateUserDTO();
 
         updateUserDTO.setFirstName(user.getFirstName());
@@ -41,11 +33,11 @@ public class UserMapper {
         return updateUserDTO;
     }
 
-    public static User updateUserFromDTO(User user, UpdateUserDTO updateUserDTO) {
+    public  User updateUserFromDTO(User user, UpdateUserDTO updateUserDTO) {
         user.setFirstName(updateUserDTO.getFirstName());
         user.setLastName(updateUserDTO.getLastName());
         user.setPhone(updateUserDTO.getPhone());
-
+        
         return user;
     }
 }
