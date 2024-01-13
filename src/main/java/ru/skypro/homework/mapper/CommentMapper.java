@@ -28,14 +28,6 @@ public class CommentMapper {
         return commentDTO;
     }
 
-    public Comment fromCommentDTO(CommentDTO commentDTO) {
-        Comment comment = new Comment();
-
-        comment.setCommentId(commentDTO.getPk());
-        comment.setCreatedAt(LocalDateTime.ofInstant(
-                Instant.ofEpochMilli(commentDTO.getCreatedAt()), TimeZone.getDefault().toZoneId()));
-        return comment;
-    }
 
     public CommentsDTO toCommentsDTO(List<Comment> comments) {
         CommentsDTO commentsDTO = new CommentsDTO();

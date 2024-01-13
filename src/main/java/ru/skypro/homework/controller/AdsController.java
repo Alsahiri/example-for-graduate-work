@@ -14,6 +14,8 @@ import ru.skypro.homework.dto.CreateOrUpdateAdDTO;
 import ru.skypro.homework.dto.ExtendedAdDTO;
 import ru.skypro.homework.service.AdService;
 
+import java.io.IOException;
+
 
 @Slf4j
 @CrossOrigin(value = "http://localhost:3000")
@@ -42,8 +44,8 @@ public class AdsController {
     }
 
     @DeleteMapping("/ads/{id}")
-    public ResponseEntity<Void> removeAd(@PathVariable(name = "id") int adId) {
-        adService.removeAd(adId);
+    public ResponseEntity<Void> removeAd(@PathVariable(name = "id") int adId, Authentication authentication) throws IOException {
+        adService.removeAd(adId, authentication);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 

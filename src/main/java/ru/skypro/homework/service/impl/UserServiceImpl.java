@@ -1,6 +1,7 @@
 package ru.skypro.homework.service.impl;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ru.skypro.homework.dto.NewPasswordDTO;
@@ -24,6 +25,11 @@ public class UserServiceImpl implements UserService {
         this.userMapper = userMapper;
     }
 
+    /**
+     * Производит смену пароля для текущего авторизованного пользователя и сохраняет его в БД
+     * @param authentication объект типа Authentication, текущий авторизованный пользователь, предоставляет фронтенд
+     * @param newPasswordDTO объект содержащий текущий и новый парль для пользователя
+     */
     @Override
     public void setNewPassword(Authentication authentication, NewPasswordDTO newPasswordDTO) {
         User user = getCurrentUser(authentication);
@@ -33,6 +39,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * Возвращает информационую запись (UserDTO) о текущем авторизованном пользователе
+     * @param authentication объект типа Authentication, текущий авторизованный пользователь, предоставляет фронтенд
+     * @return Возвращает объект класса UserDTO
+     */
     @Override
     public UserDTO getUserInfoByUsername(Authentication authentication) {
         User user = getCurrentUser(authentication);
@@ -40,6 +51,12 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserDTO(user);
     }
 
+    /**
+     * Производит поиск в БД пользователя по его уникальному имени (логину)
+     * @param username Логин пользователя, используемый при регистрации и входе в систему
+     * @return Пользователь в виде объекта класса AdUser
+     * @throws UsernameNotFoundException - если пользователь не найден в БД по указанному имени
+     */
     @Override
     public User getUserByUsername(String username) {
         User user = userRepository.findByUsername(username);
@@ -49,12 +66,23 @@ public class UserServiceImpl implements UserService {
         return user;
     }
 
+    /**
+     * Производит поиск в БД пользователя по его уникальному идентификатору id
+     * @param userId идентификатор пользователя
+     * @return Пользователь в виде объекта класса AdUser
+     * @throws UserNotFoundException если пользователь не найден в БД по указанному идентификатору
+     */
     @Override
     public User getUserById(Integer userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(String.format("Пользователь с id: %d не найден в БД", userId)));
     }
 
+    /**
+     * Возвращает объект класса AdUser, соответствующий текущему авторизованному пользователю
+     * @param authentication объект типа Authentication, текущий авторизованный пользователь, предоставляет фронтенд
+     * @return Пользователь в виде объекта класса AdUser
+     */
     @Override
     public User getCurrentUser(Authentication authentication) {
         String username = authentication.getName();

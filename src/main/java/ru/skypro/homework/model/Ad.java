@@ -10,7 +10,7 @@ public class Ad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ad_id")
-    private Integer AdId;
+    private Integer adId;
 
     @ManyToOne
     @JoinColumn(name = "author_id", referencedColumnName = "user_id")

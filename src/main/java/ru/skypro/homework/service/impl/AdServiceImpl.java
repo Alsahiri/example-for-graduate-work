@@ -1,5 +1,6 @@
 package ru.skypro.homework.service.impl;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import ru.skypro.homework.dto.AdDTO;
@@ -14,6 +15,7 @@ import ru.skypro.homework.repository.AdRepository;
 import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AdService;
 
+import java.io.IOException;
 import java.util.List;
 @Service
 public class AdServiceImpl implements AdService {
@@ -26,7 +28,10 @@ public class AdServiceImpl implements AdService {
         this.userRepository = userRepository;
         this.adMapper = adMapper;
     }
-
+    /**
+     * Возвращает список всех объявлений из БД
+     * @return список объявлений в виде объекта AdsDTO
+     */
     @Override
     public AdsDTO getAllAds() {
         List<Ad> adList = adRepository.findAll();
@@ -47,13 +52,26 @@ public class AdServiceImpl implements AdService {
         return adMapper.toAdDTO(ad);
     }
 
+    /**
+     * Возвращает объявление из БД по его уникальному идентификатору
+     * @param adId идентификатор объявления
+     * @return Объявление в виде объекта класса Ad
+     * @throws AdNotFoundException - если объявление не найдено в БД по указанному идентфикатру
+     */
     @Override
     public Ad getAdById(Integer adId) {
         return adRepository.findById(adId).orElseThrow(() -> new AdNotFoundException(String.format("Объявление с id: %d не найдено в БД", adId)));
     }
-
+    /**
+     * Удаляет объявление с указанным идентификатором adId.
+     * Дополнительно проводится проверка в соответствии с переданным параметром authentication и ролевой моделью.
+     * Права на удаление объявления есть только у его создателя и администраторов (тех, кто обладает ролью ADMIN).
+     * @param adId идентификатор объявления
+     * @param authentication текущий авторизованный пользователь, предоставляет фронтенд
+     */
     @Override
-    public void removeAd(Integer adId) {
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isOwnerAd(authentication, #adId)")
+    public void removeAd(Integer adId, Authentication authentication) throws IOException {
         Ad ad = getAdById(adId);
         adRepository.delete(ad);
     }
@@ -69,6 +87,11 @@ public class AdServiceImpl implements AdService {
         return adMapper.toAdDTO(ad);
     }
 
+    /**
+     * Возвращает список объявлений текущего авторизованного пользователя
+     * @param authentication текущий авторизованный пользователь, предоставляет фронтенд
+     * @return список объявлений в виде объекта AdsDTO
+     */
     @Override
     public AdsDTO getAllAdsByMe(Authentication authentication) {
         String username = authentication.getName();
