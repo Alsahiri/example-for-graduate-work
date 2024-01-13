@@ -2,45 +2,60 @@ package ru.skypro.homework.service.impl;
 
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
-import ru.skypro.homework.dto.Register;
+import ru.skypro.homework.dto.RegisterDTO;
+import ru.skypro.homework.repository.UserRepository;
 import ru.skypro.homework.service.AuthService;
+
+import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final UserDetailsManager manager;
     private final PasswordEncoder encoder;
+    private final UserRepository userRepository;
 
-    public AuthServiceImpl(UserDetailsManager manager,
-                           PasswordEncoder passwordEncoder) {
-        this.manager = manager;
+    public AuthServiceImpl(PasswordEncoder passwordEncoder, UserRepository userRepository) {
         this.encoder = passwordEncoder;
+        this.userRepository = userRepository;
     }
 
+    /**
+     * Производит проверку логина/пароля пользователя на соответствие данным, хранящимся в БД
+     * @param userName уникальное имя, логин пользователя (его email), предоставляет фронтенд
+     * @param password пароль пользователя, предоставляет фронтенд
+     * @return true - если пароль, переданный в параметре password соответствует закодированному паролю, хранящемуся в БД
+     * @throws UsernameNotFoundException - если пользователь с указанным userName не найден в БД
+     */
     @Override
     public boolean login(String userName, String password) {
-        if (!manager.userExists(userName)) {
-            return false;
-        }
-        UserDetails userDetails = manager.loadUserByUsername(userName);
-        return encoder.matches(password, userDetails.getPassword());
+        Optional<ru.skypro.homework.model.User> userOptional = userRepository.findByEmail(userName);
+        return userOptional.filter(user -> encoder.matches(password, user.getPasswordHash())).isPresent();
     }
 
+    /**
+     * Создает нового пользователя в соответствии с переданными параметрами и сохраняет его в БД.
+     * Если пользователь с указанным логином уже существует, то создание не происходит, возвращает false
+     * @param register - объект класса RegisterDTO, содержащий регистрационную информацию о новом пользователе,
+     *                    предоставляет фронтенд
+     * @return true - если пользователь был успешно зарегистрирован и сохранен в БД
+     */
     @Override
-    public boolean register(Register register) {
-        if (manager.userExists(register.getUsername())) {
+    public boolean register(RegisterDTO register) {
+        if (userRepository.findByEmail(register.getUsername()).isPresent()) {
             return false;
         }
-        manager.createUser(
-                User.builder()
-                        .passwordEncoder(this.encoder::encode)
-                        .password(register.getPassword())
-                        .username(register.getUsername())
-                        .roles(register.getRole().name())
-                        .build());
+        ru.skypro.homework.model.User user = new ru.skypro.homework.model.User();
+        user.setEmail(register.getUsername());
+        user.setPhone(register.getPhone());
+        user.setFirstName(register.getFirstName());
+        user.setLastName(register.getLastName());
+        user.setRole(register.getRole());
+        user.setPasswordHash(encoder.encode(register.getPassword()));
+        userRepository.save(user);
         return true;
     }
 
