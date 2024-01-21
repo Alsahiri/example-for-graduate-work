@@ -34,16 +34,18 @@ public class CommentsController {
 
     @DeleteMapping("/ads/{adId}/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(@PathVariable(name = "adId") int adId,
-                                              @PathVariable(name = "commentId") int commentId)
+                                              @PathVariable(name = "commentId") int commentId,
+                                              Authentication authentication)
     {
-        commentService.deleteComment(adId, commentId);
+        commentService.deleteComment(adId, commentId, authentication);
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/ads/{adId}/comments/{commentId}")
     public ResponseEntity<CommentDTO> updateComment(@PathVariable(name = "adId") int adId,
                                                     @PathVariable(name = "commentId") int commentId,
-                                                    @RequestBody CreateOrUpdateCommentDTO updateCommentDTO) {
-        return ResponseEntity.ok(commentService.updateComment(adId, commentId, updateCommentDTO));
+                                                    @RequestBody CreateOrUpdateCommentDTO updateCommentDTO,
+                                                    Authentication authentication) {
+        return ResponseEntity.ok(commentService.updateComment(adId, commentId, updateCommentDTO, authentication));
     }
 }

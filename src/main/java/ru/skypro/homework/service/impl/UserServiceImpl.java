@@ -47,21 +47,20 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO getUserInfoByUsername(Authentication authentication) {
         User user = getCurrentUser(authentication);
-        ;
         return userMapper.toUserDTO(user);
     }
 
     /**
      * Производит поиск в БД пользователя по его уникальному имени (логину)
-     * @param username Логин пользователя, используемый при регистрации и входе в систему
+     * @param email Логин пользователя, используемый при регистрации и входе в систему
      * @return Пользователь в виде объекта класса AdUser
      * @throws UsernameNotFoundException - если пользователь не найден в БД по указанному имени
      */
     @Override
-    public User getUserByUsername(String username) {
-        User user = userRepository.findByUsername(username);
+    public User getUserByUsername(String email) {
+        User user = userRepository.findAuthUserByEmail(email);
         if (user == null) {
-            throw new UserNotFoundException(String.format("Пользователь с логином: %s не найден в БД", username));
+            throw new UserNotFoundException(String.format("Пользователь с логином: %s не найден в БД", email));
         }
         return user;
     }
@@ -85,15 +84,54 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User getCurrentUser(Authentication authentication) {
-        String username = authentication.getName();
-        return getUserByUsername(username);
+        String email = authentication.getName();
+        return getUserByUsername(email);
     }
 
+    /**
+     * Производит обновление информации о теущем авторизованном пользователе, используя параметр updateUserDTO.
+     * В случае успешного обновления сохраняет изменения в БД и возвращает актуальные параметры пользователя
+     * @param authentication объект типа Authentication, текущий авторизованный пользователь, предоставляет фронтенд
+     * @param updateUserDTO объект класса UpdateUserDTO, содержащий измененные параметры пользователя,
+     *                      которые допускается редактировать
+     * @return возвращает объект класса UpdateUserDTO с новыми параметрами пользователя
+     */
     @Override
     public UpdateUserDTO updateUserInfo(Authentication authentication, UpdateUserDTO updateUserDTO) {
         User user = getCurrentUser(authentication);
         User updatedUser = userMapper.updateUserFromDTO(user, updateUserDTO);
         updatedUser = userRepository.save(updatedUser);
         return userMapper.toUpdateUserDTO(updatedUser);
+    }
+
+    /**
+     * Производит поиск в БД пользователя по его уникальному имени (логину)
+     * @param email the username identifying the user whose data is required.
+     * @return объект класса AdUser, реализующий интерфейс UserDetails
+     * @throws UsernameNotFoundException если пользователь не найден в БД по указанному имени (логину)
+     */
+    @Override
+    public User loadUserByEmail(String email) throws UsernameNotFoundException {
+        return getUserByUsername(email);
+    }
+
+    /**
+     * Производит проверку наличие в БД пользователя, с указанным логином
+     * @param email Логин пользователя, используемый при регистрации и входе в систему
+     * @return true, если пользователь с указанным логином, существует в БД
+     */
+    @Override
+    public boolean userExists(String email) {
+        return userRepository.findByEmail(email) != null;
+    }
+
+
+    /**
+     * Создает (сохраняет) пользователя в БД
+     * @param user объект класса AdUser, пользователь
+     */
+    @Override
+    public void createUser(User user) {
+        userRepository.save(user);
     }
 }

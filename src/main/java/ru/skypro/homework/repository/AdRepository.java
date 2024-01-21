@@ -6,5 +6,5 @@ import ru.skypro.homework.model.Ad;
 import java.util.List;
 
 public interface AdRepository extends JpaRepository<Ad, Integer> {
-    List<Ad> getAllByAuthor_Username(String username);
+    List<Ad> getAllByAuthor_Email(String email);
 }

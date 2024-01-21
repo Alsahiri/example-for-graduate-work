@@ -1,5 +1,6 @@
 package ru.skypro.homework.service.impl;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import ru.skypro.homework.dto.CommentDTO;
@@ -32,16 +33,24 @@ public class CommentServiceImpl implements CommentService {
         this.userService = userService;
         this.commentMapper = commentMapper;
     }
-
+    /**
+     * Возвращает список комментариев для объявления с указанным идентификатором adId
+     * @param adId идентификатор объявления
+     * @return список комментариев объявления в виде объекта класса CommentsDTO
+     */
     @Override
-    public CommentsDTO getCommentsByAdId(Integer adId) {
+    public CommentsDTO getCommentsByAdId(int adId) {
         List<Comment> comments = commentRepository.findCommentsByAd_AdId(adId);
-        if (comments.isEmpty()) {
-            throw new CommentNotFoundException(String.format("Комментарии для объявления с id: %d не найдены в БД", adId));
-        }
         return commentMapper.toCommentsDTO(comments);
     }
 
+    /**
+     * Добавляет комментарий от имени текущего авторизованного пользователя для объявления с идентификатором adId.
+     * @param adId идентификатор объявления
+     * @param createCommentDTO объект, содержащий поля для создания комментария
+     * @param authentication объект типа Authentication, текущий авторизованный пользователь, предоставляет фронтенд
+     * @return возвращает объект класса CommentDTO, содержащий полную информацию о новом комментарии
+     */
     @Override
     public CommentDTO addCommentToAd(Integer adId, CreateOrUpdateCommentDTO createCommentDTO, Authentication authentication) {
         Ad ad = adService.getAdById(adId);
@@ -56,25 +65,57 @@ public class CommentServiceImpl implements CommentService {
         return commentMapper.toCommentDTO(comment);
     }
 
+    /**
+     * Удаляет комментарий с идентификатором commentId для объявления с идентификатором adId.
+     * Дополнительно проводится проверка в соответствии с переданным параметром authentication и ролевой моделью.
+     * Права на удаление комментария есть только у его создателя и администраторов (тех, кто обладает ролью ADMIN).
+     * @param adId идентификатор объявления
+     * @param commentId идентификатор комментария
+     * @param authentication объект типа Authentication, текущий авторизованный пользователь, предоставляет фронтенд
+     */
     @Override
-    public void deleteComment(Integer adId, Integer commentId) {
-        Ad ad = adService.getAdById(adId);
-        Comment comment = getCommentById(commentId);
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isOwnerComment(authentication, #commentId)")
+    public void deleteComment(int adId, int commentId, Authentication authentication) {
+        Comment comment = checkCommentPresent(adId, commentId);
         commentRepository.delete(comment);
     }
 
+    /**
+     * Обновляет комментарий с идентификатором commentId для объявления с идентификатором adId в соответствии
+     * с переданным параметром updateCommentDTO (текст комментария)
+     * Дополнительно проводится проверка в соответствии с переданным параметром authentication и ролевой моделью.
+     * Права на удаление комментария есть только у его создателя и администраторов (тех, кто обладает ролью ADMIN).
+     * @param adId идентификатор объявления
+     * @param commentId идентификатор комментария
+     * @param authentication объект типа Authentication, текущий авторизованный пользователь, предоставляет фронтенд
+     */
     @Override
-    public CommentDTO updateComment(Integer adId, Integer commentId, CreateOrUpdateCommentDTO updateCommentDTO) {
-        Ad ad = adService.getAdById(adId);
-        Comment comment = getCommentById(commentId);
+    @PreAuthorize("hasRole('ADMIN') or @securityService.isOwnerComment(authentication, #commentId)")
+    public CommentDTO updateComment(int adId, int commentId, CreateOrUpdateCommentDTO updateCommentDTO, Authentication authentication) {
+        Comment comment = checkCommentPresent(adId, commentId);
         comment.setCommentText(updateCommentDTO.getText());
         comment = commentRepository.save(comment);
         return commentMapper.toCommentDTO(comment);
     }
 
-    private Comment getCommentById(Integer commentId) {
+    /**
+     * Возвращает комментарий по его уникальному идентификатору из БД
+     * @param commentId идентификатор комментария
+     * @return Комментарий в виде объекта класса Comment
+     * @throws CommentNotFoundException - если комментарий с указанным идентификатором не найден в БД
+     */
+    @Override
+    public Comment getCommentById(Integer commentId) {
         return commentRepository.findById(commentId).orElseThrow(() ->
                 new CommentNotFoundException(String.format("Комментарий с id: %d не найден в БД", commentId)));
+    }
+
+    private Comment checkCommentPresent(int adId, int commentId) {
+        Comment comment = getCommentById(commentId);
+        if (!adService.isAdPresent(adId) || comment.getAd().getAdId() != adId) {
+            throw new CommentNotFoundException(String.format("Комментарий с id: %d не найден в БД для объявления с id: %d", commentId, adId));
+        }
+        return comment;
     }
 
 }

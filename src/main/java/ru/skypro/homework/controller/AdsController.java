@@ -13,6 +13,7 @@ import ru.skypro.homework.dto.AdsDTO;
 import ru.skypro.homework.dto.CreateOrUpdateAdDTO;
 import ru.skypro.homework.dto.ExtendedAdDTO;
 import ru.skypro.homework.service.AdService;
+import ru.skypro.homework.service.ImageService;
 
 import java.io.IOException;
 
@@ -24,6 +25,7 @@ import java.io.IOException;
 public class AdsController {
 
     private final AdService adService;
+    private final ImageService imageService;
 
     @GetMapping(" /ads")
     public ResponseEntity<AdsDTO> getAllAds() {
@@ -33,8 +35,8 @@ public class AdsController {
     @PostMapping(value = "/ads", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<AdDTO> addAd(@RequestPart("properties") CreateOrUpdateAdDTO createAdDTO,
                                        @RequestPart("image") MultipartFile multipartFile,
-                                       Authentication authentication)  {
-        AdDTO adDTO = adService.addAd(createAdDTO, authentication);
+                                       Authentication authentication) throws IOException {
+        AdDTO adDTO = adService.addAd(createAdDTO, multipartFile, authentication);
         return ResponseEntity.ok(adDTO);
     }
 
@@ -51,8 +53,9 @@ public class AdsController {
 
     @PatchMapping("/ads/{id}")
     public ResponseEntity<AdDTO> updateAds(@PathVariable(name = "id") int adId,
-                                           @RequestBody CreateOrUpdateAdDTO updateAdDTO) {
-        return ResponseEntity.ok(adService.updateAd(adId, updateAdDTO));
+                                           @RequestBody CreateOrUpdateAdDTO updateAdDTO,
+                                           Authentication authentication) {
+        return ResponseEntity.ok(adService.updateAd(adId, updateAdDTO, authentication));
     }
 
     @GetMapping("/ads/me")

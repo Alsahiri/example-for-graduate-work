@@ -12,12 +12,4 @@ public class RegisterDTO {
     private String phone;
     private Role role;
 
-    public RegisterDTO(String username, String password, String firstName, String lastName, String phone, Role role) {
-        this.username = username;
-        this.password = password;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phone = phone;
-        this.role = role;
-    }
 }

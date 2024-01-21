@@ -29,11 +29,6 @@ public class User {
     @Column(name = "avatar_path")
     private String avatarFilePath;
 
-    @Column(name = "avatar_size")
-    private Integer avatarFileSize;
-
-    @Column(name = "avatar_type")
-    private String avatarMediaType;
 
     @Column(name = "pwd_hash", nullable = false)
     private String passwordHash;
